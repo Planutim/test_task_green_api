@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPA Example</title>
+    <link rel="stylesheet" href="spa.css">
+    <script src="config.js"></script>
+</head>
+<body>
+    <main>
+        <!-- Content will be loaded here -->
+    </main>
+    <div id="container">
+        <form id="contactForm">
+            <div class="group">
+                <input type="text" id="idInstance" name="idInstance" placeholder="idInstance" required>
+                <input type="text" id="apiTokenInstance" name="apiTokenInstance" placeholder="ApiTokenInstance" required>
+            </div>
+            <div class="group">
+                <button type="button" id="getSettings">Get Settings</button>
+            </div>
+            <div class="group">
+                <button type="button" id="getStateInstance">Get State Instance</button>
+            </div>
+            <div class="group">
+                <input type="text" id="phoneNumber" name="phoneNumber" placeholder="+7 123 456 7890" required>
+                <textarea id="body" name="body" placeholder="Message" required></textarea>
+                <button type="button" id="sendMessage">Send Message</button>
+            </div>
+            <div class="group">
+                <input type="text" id="phoneNumberFile" name="phoneNumberFile" placeholder="+7 123 456 7890" required>
+                <input type="text" id="urlFile" name="urlFile" placeholder="File URL" required>
+                <button type="button" id="sendFileByUrl" disabled>Send File by Url</button>
+            </div>
+        </form>
+        <div id="jsonResponse">
+            <!-- JSON response will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('getSettings').addEventListener('click', function() {
+        const idInstance = document.getElementById('idInstance').value;
+        const apiTokenInstance = document.getElementById('apiTokenInstance').value;
+
+        if (!idInstance || !apiTokenInstance) {
+            alert('Please fill in both idInstance and apiTokenInstance fields.');
+            return;
+        }
+
+        fetch(`${CONFIG.API_URL}/waInstance${idInstance}/getSettings/${apiTokenInstance}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('jsonResponse').innerText = JSON.stringify(data, null, 2);
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+    document.getElementById('getStateInstance').addEventListener('click', function() {
+        const idInstance = document.getElementById('idInstance').value;
+        const apiTokenInstance = document.getElementById('apiTokenInstance').value;
+
+        if (!idInstance || !apiTokenInstance) {
+            alert('Please fill in both idInstance and apiTokenInstance fields.');
+            return;
+        }
+
+        fetch(`${CONFIG.API_URL}/waInstance${idInstance}/getStateInstance/${apiTokenInstance}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('jsonResponse').innerText = JSON.stringify(data, null, 2);
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+    document.getElementById('sendMessage').addEventListener('click', function() {
+        const idInstance = document.getElementById('idInstance').value;
+        const apiTokenInstance = document.getElementById('apiTokenInstance').value;
+        let phoneNumber = document.getElementById('phoneNumber').value.trim();
+        const message = document.getElementById('body').value.trim();
+
+        if (!idInstance || !apiTokenInstance || !phoneNumber || !message) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
+        // Validate phone number format
+        const phoneNumberPattern = /^\+?[0-9]+$/;
+        if (!phoneNumberPattern.test(phoneNumber)) {
+            alert('Please enter a valid phone number with or without the "+" prefix.');
+            return;
+        }
+
+        // Remove the "+" if it exists
+        if (phoneNumber.startsWith('+')) {
+            phoneNumber = phoneNumber.substring(1);
+        }
+
+        const chatId = `${phoneNumber}@c.us`;
+
+        fetch(`${CONFIG.API_URL}/waInstance${idInstance}/sendMessage/${apiTokenInstance}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                chatId: chatId,
+                message: message
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('jsonResponse').innerText = JSON.stringify(data, null, 2);
+        })
+        .catch(error => console.error('Error:', error));
+    });
+
+    function validateSendFileByUrl() {
+        const phoneNumber = document.getElementById('phoneNumberFile').value.trim();
+        const urlFile = document.getElementById('urlFile').value.trim();
+
+        const sendFileByUrlButton = document.getElementById('sendFileByUrl');
+        if (phoneNumber && urlFile) {
+            sendFileByUrlButton.disabled = false;
+        } else {
+            sendFileByUrlButton.disabled = true;
+        }
+    }
+
+    document.getElementById('phoneNumberFile').addEventListener('input', validateSendFileByUrl);
+    document.getElementById('urlFile').addEventListener('input', validateSendFileByUrl);
+
+    document.getElementById('sendFileByUrl').addEventListener('click', function() {
+        const idInstance = document.getElementById('idInstance').value;
+        const apiTokenInstance = document.getElementById('apiTokenInstance').value;
+        let phoneNumber = document.getElementById('phoneNumberFile').value.trim();
+        const urlFile = document.getElementById('urlFile').value.trim();
+
+        if (!idInstance || !apiTokenInstance || !phoneNumber || !urlFile) {
+            alert('Please fill in all required fields.');
+            return;
+        }
+
+        // Validate phone number format
+        const phoneNumberPattern = /^\+?[0-9]+$/;
+        if (!phoneNumberPattern.test(phoneNumber)) {
+            alert('Please enter a valid phone number with or without the "+" prefix.');
+            return;
+        }
+
+        // Remove the "+" if it exists
+        if (phoneNumber.startsWith('+')) {
+            phoneNumber = phoneNumber.substring(1);
+        }
+
+        const chatId = `${phoneNumber}@c.us`;
+
+        fetch(`${CONFIG.API_URL}/waInstance${idInstance}/sendFileByUrl/${apiTokenInstance}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                chatId: chatId,
+                urlFile: urlFile,
+                fileName: urlFile.split('/').pop()
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('jsonResponse').innerText = JSON.stringify(data, null, 2);
+        })
+        .catch(error => console.error('Error:', error));
+    });
+    </script>
+</body>
+</html>
